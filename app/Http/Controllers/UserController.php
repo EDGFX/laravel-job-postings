@@ -8,22 +8,57 @@ use App\Models\User;
 
 class UserController extends Controller
 {
-    public function index() {
-        return view('register');
-    }
+   public function registerUser() {
+    return view('users.register');
+   }
 
-    public function store(Request $request) {
-        //Validate all form fields for correct parameters described below prior to submission.
+   // Takes the user registration input, validates the provided fields, and stores the newly created user information into the database.
+   public function storeUser(Request $request) {
         $formFields = $request->validate([
-            'name' => 'required',
-            'email' => ['required', Rule::unique('listings', 'company')],
-            'password' => 'required',
-            'password2' => 'required'
+            'name' => ['required', 'min:3'],
+            'email' => ['required', 'email', Rule::unique('users', 'email')],
+            'password' => 'required|confirmed|min:6'
         ]);
 
-        User::create($formFields);
+        //Hash Password
+        $formFields['password'] = bcrypt($formFields['password']);
 
-        //After form is validated and submitted, redirect user to the home page.
-        return redirect('/')->with('message', 'You Have Registered Created Successfully!');
-    }
+        //Creates User After Validation Is Completed
+        $user = User::create($formFields);
+
+        //Log User In After Registration
+        auth()->login($user);
+
+        return redirect('/')->with('message', 'You have successfully registered, and are now logged in!');
+   }
+
+   public function userLogout(Request $request) {
+        auth()->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('message', 'You have been logged out successfully.');
+   }
+
+   //Show Login Form
+   public function userLogin() {
+        return view('users.login');
+   }
+
+   //Authenticate User
+   public function authUser(Request $request) {
+        $formFields = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => 'required'
+        ]);
+
+        if(auth()->attempt($formFields)) {
+            $request->session()->regenerate();
+
+            return redirect('/')->with('message', 'You have logged in successfully!');
+        }
+
+        return back()->withError();
+   }
 }

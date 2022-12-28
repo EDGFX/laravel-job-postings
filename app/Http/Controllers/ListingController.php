@@ -50,10 +50,62 @@ class ListingController extends Controller
             $formFields['logo'] = $request->file('logo')->store('logos', 'public');
         }
 
+        $formFields['user_id'] = auth()->id();
 
         Listing::create($formFields);
 
         //After form is validated and submitted, redirect user to the home page.
         return redirect('/')->with('message', 'List Was Created Successfully!');
+    }
+
+    //Show Edit Form
+    public function editListing(Listing $listing) {
+        return view('listings.edit', ['listing' => $listing]);
+    }
+
+    //Update Listing Data In Database
+    public function updateListing(Request $request, Listing $listing) {
+
+        if($listing->user_id != auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        //Validate all form fields for correct parameters described below prior to submission.
+        $formFields = $request->validate([
+            'title' => 'required',
+            'company' => ['required'],
+            'location' => 'required',
+            'website' => 'required',
+            'email' => ['required', 'email'],
+            'tags' => 'required',
+            'description' => 'required'
+        ]);
+
+        if($request->hasFile('logo')) {
+            $formFields['logo'] = $request->file('logo')->store('logos', 'public');
+        }
+
+        $listing->update($formFields);
+
+        //After form is validated and submitted, redirect user to the home page.
+        return redirect('/listings/'. $listing->id)->with('message', 'Listing Was Updated Successfully!');
+    }
+
+    //Delete Listing
+    public function deleteListing(Listing $listing) {
+        if($listing->user_id != auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $listing->delete();
+        return redirect('/')->with('message', 'Listing Was Deleted Successfully!');
+    }
+
+
+    public function manageListing() {
+        return view('listings.manage', 
+        [
+            'listings' => auth()->user()->listings()->get()
+        ]);
     }
 }

@@ -14,11 +14,19 @@ class="relative h-72 bg-laravel flex flex-col justify-center align-center text-c
         Find or post Laravel jobs & projects
     </p>
     <div>
+        @auth
         <a
-            href="/register/user"
+            href="/listings/create"
+            class="inline-block border-2 border-white text-white py-2 px-4 rounded-xl uppercase mt-2 hover:text-black hover:border-black"
+            >List A New Gig</a
+        >
+        @else
+        <a
+            href="/register"
             class="inline-block border-2 border-white text-white py-2 px-4 rounded-xl uppercase mt-2 hover:text-black hover:border-black"
             >Sign Up to List a Gig</a
         >
+        @endauth
     </div>
 </div>
 </section>
